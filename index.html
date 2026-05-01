@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de Planilha para TXT</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Adicionando SheetJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Adicionando Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Conversor de Planilhas</h1>
+            <p>Transforme sua planilha Excel ou CSV em um arquivo de texto formatado.</p>
+        </header>
+
+        <main>
+            <div class="upload-area" id="drop-zone">
+                <div class="icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </div>
+                <h2>Arraste e solte sua planilha aqui</h2>
+                <p>ou clique para selecionar um arquivo</p>
+                <input type="file" id="file-input" accept=".xlsx, .xls, .csv" hidden>
+                <button class="btn-primary" onclick="document.getElementById('file-input').click()">Selecionar Arquivo</button>
+            </div>
+
+            <div class="file-info" id="file-info" style="display: none;">
+                <div class="file-details">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                        <polyline points="13 2 13 9 20 9"></polyline>
+                    </svg>
+                    <span id="file-name">planilha.xlsx</span>
+                </div>
+                <button class="btn-success" id="export-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Exportar para TXT
+                </button>
+            </div>
+            
+            <div id="status-message" class="status-message"></div>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
