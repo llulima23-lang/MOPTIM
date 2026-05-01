@@ -137,6 +137,37 @@ button {
     color: var(--text-main);
 }
 
+.options-container {
+    margin-top: 20px;
+    text-align: left;
+}
+
+.options-container label {
+    display: block;
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.format-select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--text-main);
+    background-color: #f8fafc;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.format-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
 .status-message {
     margin-top: 16px;
     font-size: 14px;

@@ -124,7 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         paddedRow.push(row[i]);
                     }
                     
-                    const formattedRow = paddedRow.map(cell => formatCell(cell));
+                    const selectedFormat = document.getElementById('format-select').value;
+                    const formattedRow = paddedRow.map(cell => formatCell(cell, selectedFormat));
                     txtOutput += formattedRow.join('|') + '\r\n';
                 });
                 
@@ -149,18 +150,28 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsArrayBuffer(currentFile);
     });
 
-    function formatCell(val) {
+    function formatCell(val, selectedFormat) {
         if (val === null || val === undefined || val === '') return '';
         
         if (typeof val === 'number') {
-            // Formato "Geral": Apenas mantemos o número como está e trocamos ponto por vírgula nos decimais
-            return String(val).replace('.', ',');
+            if (selectedFormat === 'modelo1') {
+                // Modelo 1: Duas casas decimais forçadas (ex: 1234,00)
+                return val.toFixed(2).replace('.', ',');
+            } else {
+                // Modelo 2: "Geral" mantemos o número como está e trocamos ponto por vírgula nos decimais
+                return String(val).replace('.', ',');
+            }
         }
         
         if (val instanceof Date) {
-            // Data Abreviada: DD/MM/YYYY
             const pad = n => n.toString().padStart(2, '0');
-            return `${pad(val.getDate())}/${pad(val.getMonth()+1)}/${val.getFullYear()}`;
+            if (selectedFormat === 'modelo1') {
+                // Modelo 1: Data com Horário
+                return `${pad(val.getDate())}/${pad(val.getMonth()+1)}/${val.getFullYear()} ${pad(val.getHours())}:${pad(val.getMinutes())}:${pad(val.getSeconds())}`;
+            } else {
+                // Modelo 2: Data Abreviada
+                return `${pad(val.getDate())}/${pad(val.getMonth()+1)}/${val.getFullYear()}`;
+            }
         }
         
         // Se for string ou outro formato, tratar espaços extras
