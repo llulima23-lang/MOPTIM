@@ -104,6 +104,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Transformar em TXT com |
                 let txtOutput = "";
                 let headerLength = 0;
+                let headers = [];
+                let isFirstRow = true;
                 
                 jsonData.forEach((row, rowIndex) => {
                     if (!row || row.length === 0) return;
@@ -112,9 +114,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     const hasData = row.some(cell => cell !== "" && cell !== null && cell !== undefined);
                     if (!hasData) return;
                     
-                    // Definir o tamanho do cabeçalho pela primeira linha válida
+                    // Definir o tamanho e guardar os cabeçalhos para mapeamento de tipos
                     if (headerLength === 0) {
                         headerLength = row.length;
+                        headers = row.map(h => String(h || '').trim().toUpperCase());
                     }
                     
                     // Preencher a linha com valores nulos até o tamanho do cabeçalho
@@ -125,8 +128,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     
                     const selectedFormat = document.getElementById('format-select').value;
-                    const formattedRow = paddedRow.map(cell => formatCell(cell, selectedFormat));
+                    const formattedRow = paddedRow.map((cell, colIndex) => {
+                        const headerName = headers[colIndex];
+                        return formatCell(cell, selectedFormat, headerName, isFirstRow);
+                    });
                     txtOutput += formattedRow.join('|') + '\r\n';
+                    isFirstRow = false;
                 });
                 
                 // Fazer download do arquivo TXT
@@ -150,40 +157,67 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsArrayBuffer(currentFile);
     });
 
-    function formatCell(val, selectedFormat) {
+    function formatCell(val, selectedFormat, headerName, isHeader) {
         if (val === null || val === undefined || val === '') return '';
         
-        if (typeof val === 'number') {
-            if (selectedFormat === 'modelo1') {
-                // Modelo 1: Duas casas decimais forçadas (ex: 1234,00)
-                return val.toFixed(2).replace('.', ',');
-            } else {
-                // Modelo 2: "Geral" mantemos o número como está e trocamos ponto por vírgula nos decimais
-                return String(val).replace('.', ',');
-            }
-        }
-        
-        if (val instanceof Date) {
+        // Formatar objeto Data corretamente para evitar "Horário Padrão de Brasília"
+        let isDateObj = val instanceof Date;
+        let formattedDateStr = "";
+        if (isDateObj) {
             const pad = n => n.toString().padStart(2, '0');
             if (selectedFormat === 'modelo1') {
-                // Modelo 1: Data com Horário
-                return `${pad(val.getDate())}/${pad(val.getMonth()+1)}/${val.getFullYear()} ${pad(val.getHours())}:${pad(val.getMinutes())}:${pad(val.getSeconds())}`;
+                // A pedido, fixar o horário em 00:00:00 independentemente do horário interno do JS/Excel
+                formattedDateStr = `${pad(val.getDate())}/${pad(val.getMonth()+1)}/${val.getFullYear()} 00:00:00`;
             } else {
-                // Modelo 2: Data Abreviada
-                return `${pad(val.getDate())}/${pad(val.getMonth()+1)}/${val.getFullYear()}`;
+                formattedDateStr = `${pad(val.getDate())}/${pad(val.getMonth()+1)}/${val.getFullYear()}`;
             }
         }
         
-        // Se for string ou outro formato, tratar espaços extras
-        let strVal = String(val).trim();
-        
-        // Se a string já tiver formato de data não vamos colocar aspas duplas
-        if (/^\d{1,2}\/\d{1,2}\/\d{4}/.test(strVal)) {
-             return strVal;
+        if (selectedFormat === 'modelo1') {
+            if (isHeader) {
+                // No modelo Access, os cabeçalhos sempre ganham aspas
+                return `"${String(val)}"`;
+            }
+            
+            // Mapeamento de tipos exato como a exportação original do Access
+            const isNumericCol = ['CPF', 'MATRICULAMF', 'CPF OPERADOR'].includes(headerName);
+            const isDateCol = ['ADMISSAO', 'ADMISSÃO'].includes(headerName);
+            
+            if (isNumericCol) {
+                let num = Number(val);
+                if (!isNaN(num) && String(val).trim() !== '') {
+                    // Exporta como ,00 sem aspas
+                    return num.toFixed(2).replace('.', ',');
+                }
+                return String(val); // Fallback
+            }
+            
+            if (isDateCol || isDateObj) {
+                if (isDateObj) return formattedDateStr;
+                return String(val); // Se a data veio como texto no excel
+            }
+            
+            // Para as demais colunas (incluindo FAIXA), tratamos como Texto (com aspas)
+            // Mesmo se no Excel estiver um número como 31 ou 61
+            return `"${String(val)}"`;
+            
+        } else {
+            // Opção 2: Modelo de formatação flexível (Geral e Data Abreviada)
+            if (typeof val === 'number') {
+                return String(val).replace('.', ',');
+            }
+            
+            if (isDateObj) {
+                return formattedDateStr;
+            }
+            
+            let strVal = String(val);
+            if (/^\s*\d{1,2}\/\d{1,2}\/\d{4}/.test(strVal)) {
+                 return strVal;
+            }
+            
+            return `"${strVal}"`;
         }
-        
-        // Qualquer outro texto ganha aspas
-        return `"${strVal}"`;
     }
 
     function downloadFile(filename, content) {
